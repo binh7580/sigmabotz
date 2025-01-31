@@ -1,0 +1,28 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Adonis = ReplicatedStorage:FindFirstChild("Adonis_Commands")
+
+if not Adonis then
+    warn("Adonis không được tìm thấy! Hãy chắc chắn rằng game có Adonis Admin.")
+    return
+end
+
+local function BypassRankWithLevel()
+    local fakeAdmin = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    
+    -- Cấp rank "sigma boy" và level 5000
+    local commands = {
+        ":setrank me sigma boy",  
+        ":addlevel me 5000",  
+    }
+    
+    for _, command in ipairs(commands) do
+        Adonis:FireServer(command)
+    end
+end
+
+BypassRankWithLevel()
+
+print("✅ Bạn đã được cấp rank 'sigma boy' và Level 5000 thành công!")

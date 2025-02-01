@@ -1,0 +1,149 @@
+
+	
+	for i, v in pairs(cmdAutofill:GetChildren()) do
+		if v:IsA("Frame") then
+			local found = Commands[v.Name]
+			if Commands[v.Name] then
+				if str ~= "" and v.Name:find(str) == 1 then
+					v.LayoutOrder = 1
+					table.insert(_1, v)
+				end
+				if str ~= "" and v.Name:find(str) and v.LayoutOrder ~= 1 then
+					v.LayoutOrder = 2
+					table.insert(_2, v)
+				end
+				if str == "" or v.Name:find(str) == nil then
+					v.LayoutOrder = 3
+					table.insert(_3, v)
+				end
+			end
+			for CmdName, tbl in pairs(Aliases) do
+				if Commands[v.Name][1] == tbl[1] then
+					if str ~= "" and CmdName:find(str) == 1 then
+						v.LayoutOrder = 1
+						table.insert(_1, v)
+					end
+					if str ~= "" and CmdName:find(str) then
+						v.LayoutOrder = 2
+						table.insert(_2, v)
+					end
+					if str == "" or CmdName:find(str) == nil then
+						v.LayoutOrder = 3
+						table.insert(_3, v)
+					end
+					break
+				end
+			end
+		end
+	end
+	
+	for i, v in pairs(_1) do if not lib.find(_0, v) then table.insert(_0, v) end end
+	for i, v in pairs(_2) do if not lib.find(_0, v) then table.insert(_0, v) end end
+	for i, v in pairs(_3) do if not lib.find(_0, v) then table.insert(_0, v) end end
+	
+	local last
+	for i, v in pairs(_0) do
+		local n = (i ^ -0.5) * 125
+		if last then
+			local pos = last.Value.Value
+			local newPos = UDim2.new(0.5, 0, 0, pos + 25 + 3)
+			gui.tween(v, "Quint", "Out", 0.3, {
+				Size = UDim2.new(0.5, n, 0, 25)
+			})
+			v.Value.Value = newPos.Y.Offset
+			v.LayoutOrder = i
+		else
+			gui.tween(v, "Quint", "Out", 0.3, {
+				Size = UDim2.new(0.5, n, 0, 25)
+			})
+			v.Value.Value = 0
+			v.LayoutOrder = i
+		end
+		last = v
+	end
+end
+
+--[[ GUI FUNCTIONALITY ]]--
+mouse.KeyDown:Connect(function(k)
+	if k:lower() == opt.prefix then
+		gui.barSelect()
+		cmdInput.Text = ''
+		cmdInput:CaptureFocus()
+	end
+end)
+
+cmdInput.FocusLost:Connect(function(enterPressed)
+	if enterPressed then
+		wrap(function()
+			lib.parseCommand(opt.prefix .. cmdInput.Text)
+		end)
+	end
+	gui.barDeselect()
+end)
+
+cmdInput.Changed:Connect(function(p)
+	if p ~= "Text" then return end
+	gui.searchCommands()
+end)
+
+gui.barDeselect(0)
+cmdBar.Visible = true
+gui.menuify(chatLogsFrame)
+gui.menuify(commandsFrame)
+gui.resizeable(chatLogsFrame, Vector2.new(173,58), Vector2.new(1000,1000))
+gui.resizeable(commandsFrame, Vector2.new(184,84), Vector2.new(1000,1000))
+
+commandsFilter.Changed:Connect(function(p)
+	if p ~= "Text" then return end
+	for i, v in pairs(commandsList:GetChildren()) do
+		if v:IsA("TextLabel") then
+			if v.Name:find(commandsFilter.Text:lower()) and v.Name:find(commandsFilter.Text:lower()) <= 2 then
+				v.Visible = true
+			else
+				v.Visible = false
+			end
+		end
+	end
+end)
+
+local function bindToChat(plr, msg)
+	local chatMsg = chatExample:Clone()
+	for i, v in pairs(chatLogs:GetChildren()) do
+		if v:IsA("TextLabel") then
+			v.LayoutOrder = v.LayoutOrder + 1
+		end
+	end
+	chatMsg.Parent = chatLogs
+	chatMsg.Text = ("[%s]: %s"):format(plr.Name, msg)
+	
+	local txtSize = gui.txtSize(chatMsg, chatMsg.AbsoluteSize.X, 100)
+	chatMsg.Size = UDim2.new(1, -5, 0, txtSize.Y)
+end
+
+for i, plr in pairs(Players:GetPlayers()) do
+	plr.Chatted:Connect(function(msg)
+		bindToChat(plr, msg)
+	end)
+end
+Players.PlayerAdded:Connect(function(plr)
+	plr.Chatted:Connect(function(msg)
+		bindToChat(plr, msg)
+	end)
+end)
+
+mouse.Move:Connect(function()
+	description.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+	local size = gui.txtSize(description, 200, 100)
+	description.Size = UDim2.new(0, size.X, 0, size.Y)
+end)
+
+RunService.Stepped:Connect(function()
+	chatLogs.CanvasSize = UDim2.new(0, 0, 0, chatLogs.UIListLayout.AbsoluteContentSize.Y)
+	commandsList.CanvasSize = UDim2.new(0, 0, 0, commandsList.UIListLayout.AbsoluteContentSize.Y)
+end)
+
+function Destroy(guiObject)
+	if not pcall(function()guiObject.Parent = game:GetService("CoreGui")end) then
+		guiObject.Parent = nil
+	end
+end

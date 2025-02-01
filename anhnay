@@ -1,6 +1,6 @@
 local opt = {
-	prefix = ';',
-	tupleSeparator = ',',
+	prefix = ':',
+	tupleSeparator = 'F9',
 	ui = {
 		
 	},
